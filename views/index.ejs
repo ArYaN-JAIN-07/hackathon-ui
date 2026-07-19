@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ADMETify AI</title>
+
+    <link rel="stylesheet" href="/style.css">
+
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+
+<div class="bg-grid"></div>
+<div class="dna-left"></div>
+<div class="dna-right"></div>
+
+<nav>
+    <h2>ADMETify</h2>
+
+    <div>
+        <a href="/">Home</a>
+        <a href="/about">About</a>
+        <a href="/metrics">Metrics</a>
+    </div>
+</nav>
+
+<section class="hero">
+
+    <div class="hero-content">
+
+        <span class="badge">
+            AI Drug Discovery Platform
+        </span>
+
+        <h1>
+            Predict ADMET Properties
+            From Molecular Structures
+        </h1>
+
+        <p>
+            Analyze Absorption, Distribution,
+            Metabolism, Excretion and Toxicity
+            directly from molecular SMILES strings.
+        </p>
+
+        <form action="/predict" method="POST">
+
+            <input
+                type="text"
+                name="smiles"
+                placeholder="Enter SMILES (e.g. CCO)"
+            >
+
+            <button>
+                Analyze Molecule
+            </button>
+
+        </form>
+
+    </div>
+
+</section>
+
+</body>
+</html>
