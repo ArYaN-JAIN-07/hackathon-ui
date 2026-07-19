@@ -1,0 +1,658 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ADMETify AI — Drug Discovery Platform</title>
+
+    <link rel="stylesheet" href="/style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
+    
+    <style>
+        /* Additional Custom Styled Components for Dynamic Integration */
+        
+        /* Select Dropdown styling */
+        .select-wrapper {
+            position: relative;
+            display: inline-block;
+        }
+        
+        form select {
+            width: 320px;
+            padding: 20px;
+            border: 1px solid rgba(255, 255, 255, .08);
+            border-radius: 18px;
+            outline: none;
+            background: #0f172a;
+            color: white;
+            font-size: 1rem;
+            font-family: inherit;
+            cursor: pointer;
+            appearance: none;
+            -webkit-appearance: none;
+            -moz-appearance: none;
+            background-image: url("data:image/svg+xml;utf8,<svg fill='white' height='24' viewBox='0 0 24 24' width='24' xmlns='http://www.w3.org/2000/svg'><path d='M7 10l5 5 5-5z'/><path d='M0 0h24v24H0z' fill='none'/></svg>");
+            background-repeat: no-repeat;
+            background-position: right 15px center;
+        }
+
+        form select:focus {
+            border: 1px solid #34d399;
+            box-shadow: 0 0 10px rgba(52, 211, 153, 0.15);
+        }
+
+        /* Buttons row and Reset button styling */
+        .button-group {
+            display: flex;
+            gap: 10px;
+        }
+
+        form .reset-btn {
+            padding: 20px 25px;
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: 18px;
+            background: rgba(15, 23, 42, 0.6);
+            color: #b7c0cf;
+            font-weight: 600;
+            cursor: pointer;
+            transition: .3s;
+        }
+
+        form .reset-btn:hover {
+            background: rgba(239, 68, 68, 0.1);
+            border-color: rgba(239, 68, 68, 0.4);
+            color: #f87171;
+            transform: translateY(-2px);
+        }
+
+        /* Loading spinner */
+        .loading-container {
+            margin-top: 40px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 15px;
+        }
+
+        .spinner {
+            width: 50px;
+            height: 50px;
+            border: 4px solid rgba(52, 211, 153, 0.1);
+            border-left-color: #34d399;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            box-shadow: 0 0 15px rgba(52, 211, 153, 0.15);
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .loading-text {
+            color: #b7c0cf;
+            font-size: 0.95rem;
+            letter-spacing: 0.5px;
+            animation: pulse 1.5s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+            50% { opacity: 0.5; }
+        }
+
+        /* Alert/Error Box */
+        .alert-box {
+            max-width: 600px;
+            margin: 30px auto 0 auto;
+            padding: 15px 25px;
+            border-radius: 14px;
+            background: rgba(239, 68, 68, 0.1);
+            border: 1px solid rgba(239, 68, 68, 0.25);
+            color: #f87171;
+            font-size: 0.95rem;
+            text-align: left;
+            line-height: 1.5;
+            box-shadow: 0 5px 15px rgba(239, 68, 68, 0.05);
+        }
+
+        /* Result card wrapper styling */
+        .result-wrapper {
+            max-width: 750px;
+            margin: 40px auto 0 auto;
+            perspective: 1000px;
+        }
+
+        .result-card {
+            background: rgba(15, 23, 42, 0.65);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 24px;
+            padding: 35px;
+            text-align: left;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3), 
+                        inset 0 1px 0 rgba(255, 255, 255, 0.05);
+            transition: all 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+            animation: slideUp 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .result-card.success-border {
+            border-color: rgba(52, 211, 153, 0.3);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3), 
+                        0 0 30px rgba(52, 211, 153, 0.1),
+                        inset 0 1px 0 rgba(255, 255, 255, 0.05);
+        }
+
+        .result-card.danger-border {
+            border-color: rgba(239, 68, 68, 0.3);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3), 
+                        0 0 30px rgba(239, 68, 68, 0.1),
+                        inset 0 1px 0 rgba(255, 255, 255, 0.05);
+        }
+
+        .result-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+            padding-bottom: 20px;
+            margin-bottom: 25px;
+        }
+
+        .result-header h3 {
+            color: white;
+            font-size: 1.4rem;
+            font-weight: 600;
+        }
+
+        .result-category-badge {
+            font-size: 0.8rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            padding: 6px 12px;
+            border-radius: 8px;
+            background: rgba(255, 255, 255, 0.08);
+            color: #b7c0cf;
+        }
+
+        .result-category-badge.absorption { color: #38bdf8; background: rgba(56, 189, 248, 0.1); }
+        .result-category-badge.distribution { color: #a855f7; background: rgba(168, 85, 247, 0.1); }
+        .result-category-badge.metabolism { color: #eab308; background: rgba(234, 179, 8, 0.1); }
+        .result-category-badge.toxicity { color: #ef4444; background: rgba(239, 68, 68, 0.1); }
+
+        .result-body {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 25px;
+        }
+
+        @media(min-width: 600px) {
+            .result-body {
+                grid-template-columns: 2fr 3fr;
+            }
+        }
+
+        .prediction-value-box {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            border-radius: 18px;
+            padding: 25px 15px;
+            text-align: center;
+        }
+
+        .pred-label {
+            font-size: 0.85rem;
+            color: #b7c0cf;
+            margin-bottom: 10px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .pred-badge {
+            font-size: 1.8rem;
+            font-weight: 700;
+            padding: 8px 20px;
+            border-radius: 12px;
+            display: inline-block;
+        }
+
+        .pred-badge.safe-class {
+            color: #34d399;
+            background: rgba(52, 211, 153, 0.12);
+            border: 1px solid rgba(52, 211, 153, 0.25);
+        }
+
+        .pred-badge.unsafe-class {
+            color: #f87171;
+            background: rgba(239, 68, 68, 0.12);
+            border: 1px solid rgba(239, 68, 68, 0.25);
+        }
+
+        .pred-badge.regression-val {
+            color: #38bdf8;
+            background: rgba(56, 189, 248, 0.12);
+            border: 1px solid rgba(56, 189, 248, 0.25);
+            font-family: monospace;
+        }
+
+        .prediction-details-box {
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            gap: 15px;
+        }
+
+        .smiles-echo {
+            font-family: monospace;
+            background: rgba(0, 0, 0, 0.25);
+            padding: 10px 15px;
+            border-radius: 10px;
+            font-size: 0.9rem;
+            color: #38bdf8;
+            word-break: break-all;
+            border: 1px solid rgba(255, 255, 255, 0.03);
+        }
+
+        .prob-bar-container {
+            margin-top: 10px;
+        }
+
+        .prob-bar-header {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.85rem;
+            color: #b7c0cf;
+            margin-bottom: 8px;
+        }
+
+        .prob-bar-outer {
+            height: 12px;
+            background: rgba(255, 255, 255, 0.08);
+            border-radius: 6px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .prob-bar-inner {
+            height: 100%;
+            border-radius: 6px;
+            transition: width 1.2s cubic-bezier(0.16, 1, 0.3, 1);
+            background-image: linear-gradient(90deg, #10b981, #34d399);
+            box-shadow: 0 0 10px rgba(52, 211, 153, 0.5);
+        }
+
+        .prob-bar-inner.high-risk {
+            background-image: linear-gradient(90deg, #ef4444, #f87171);
+            box-shadow: 0 0 10px rgba(239, 68, 68, 0.5);
+        }
+
+        .model-specs {
+            margin-top: 15px;
+            font-size: 0.8rem;
+            color: #64748b;
+            display: flex;
+            gap: 15px;
+            border-top: 1px solid rgba(255, 255, 255, 0.05);
+            padding-top: 15px;
+        }
+    </style>
+</head>
+<body>
+
+<div class="bg-grid"></div>
+<div class="dna-left"></div>
+<div class="dna-right"></div>
+
+<nav>
+    <h2>ADMETify AI</h2>
+    <div>
+        <a href="/">Home</a>
+        <a href="#result-container" id="results-nav" style="display: none;">Latest Result</a>
+    </div>
+</nav>
+
+<section class="hero">
+    <div class="hero-content">
+        <span class="badge">
+            AI Drug Discovery Platform
+        </span>
+
+        <h1>
+            Predict ADMET Properties
+        </h1>
+
+        <p>
+            Instantly evaluate Absorption, Distribution, Metabolism, Excretion and Toxicity properties of candidate molecules directly from raw SMILES strings using production-grade RandomForest pipelines.
+        </p>
+
+        <!-- Prediction Request Form -->
+        <form id="prediction-form">
+            <!-- Dynamic Model Discovery Dropdown -->
+            <select name="dataset" id="dataset" required>
+                <option value="" disabled selected>Select ADMET Property</option>
+                <% activeModels.forEach(function(model) { %>
+                    <option value="<%= model.dataset %>" data-category="<%= model.category.toLowerCase() %>" data-desc="<%= model.description %>">
+                        <%= model.category %>: <%= model.name %> (<%= model.dataset %>)
+                    </option>
+                <% }); %>
+            </select>
+
+            <input
+                type="text"
+                name="smiles"
+                id="smiles"
+                placeholder="Enter Molecular SMILES string (e.g. CCO, CC(=O)NC1=CC=C(C=C1)O)"
+                required
+            >
+
+            <div class="button-group">
+                <button type="submit" id="submit-btn">
+                    Analyze Molecule
+                </button>
+                <button type="button" id="reset-btn" class="reset-btn">
+                    Reset
+                </button>
+            </div>
+        </form>
+
+        <!-- Loading spinner -->
+        <div id="loading" class="loading-container" style="display: none;">
+            <div class="spinner"></div>
+            <div class="loading-text">Generating descriptors and running inference...</div>
+        </div>
+
+        <!-- Error feedback box -->
+        <div id="error-box" class="alert-box" style="display: none;"></div>
+
+        <!-- Dynamic Results Card Container -->
+        <div id="result-wrapper" class="result-wrapper">
+            <div id="result-container" class="result-card" style="display: none;">
+                <div class="result-header">
+                    <h3 id="res-model-name">Aqueous Solubility Prediction</h3>
+                    <span id="res-category" class="result-category-badge absorption">Absorption</span>
+                </div>
+                
+                <div class="result-body">
+                    <div class="prediction-value-box">
+                        <div class="pred-label">Model Prediction</div>
+                        <div id="res-badge" class="pred-badge safe-class">Safe</div>
+                    </div>
+                    
+                    <div class="prediction-details-box">
+                        <div>
+                            <div class="pred-label" style="margin-bottom: 6px;">Analyzed SMILES</div>
+                            <div id="res-smiles" class="smiles-echo">CCO</div>
+                        </div>
+
+                        <!-- Classification Probability bar (Hidden for regression) -->
+                        <div id="prob-container" class="prob-bar-container" style="display: none;">
+                            <div class="prob-bar-header">
+                                <span id="prob-direction-text">Probability of Active/Blocker</span>
+                                <span id="prob-percentage-text">0%</span>
+                            </div>
+                            <div class="prob-bar-outer">
+                                <div id="prob-fill" class="prob-bar-inner" style="width: 0%;"></div>
+                            </div>
+                        </div>
+
+                        <!-- Regression interpretation text (Hidden for classification) -->
+                        <div id="regression-info" style="display: none; font-size: 0.9rem; color: #b7c0cf; line-height: 1.5;">
+                            <span style="color: #38bdf8; font-weight: 600;">Interpretation:</span> 
+                            <span id="regression-text">LogS value represents solubility of drug molecule.</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="model-specs">
+                    <span>Algorithm: <strong id="res-algorithm" style="color: white;">RandomForest</strong></span>
+                    <span>Version: <strong id="res-version" style="color: white;">v1</strong></span>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</section>
+
+<script>
+    document.addEventListener("DOMContentLoaded", () => {
+        const form = document.getElementById("prediction-form");
+        const smilesInput = document.getElementById("smiles");
+        const datasetSelect = document.getElementById("dataset");
+        const submitBtn = document.getElementById("submit-btn");
+        const resetBtn = document.getElementById("reset-btn");
+        
+        const loading = document.getElementById("loading");
+        const errorBox = document.getElementById("error-box");
+        const resultContainer = document.getElementById("result-container");
+        const resultsNav = document.getElementById("results-nav");
+
+        // Result displays
+        const resModelName = document.getElementById("res-model-name");
+        const resCategory = document.getElementById("res-category");
+        const resBadge = document.getElementById("res-badge");
+        const resSmiles = document.getElementById("res-smiles");
+        const resAlgorithm = document.getElementById("res-algorithm");
+        const resVersion = document.getElementById("res-version");
+        const probContainer = document.getElementById("prob-container");
+        const probDirectionText = document.getElementById("prob-direction-text");
+        const probPercentageText = document.getElementById("prob-percentage-text");
+        const probFill = document.getElementById("prob-fill");
+        const regressionInfo = document.getElementById("regression-info");
+        const regressionText = document.getElementById("regression-text");
+
+        // Biological label details
+        const datasetLabelConfig = {
+            "BBBP": {
+                name: "Blood-Brain Barrier Penetration",
+                posLabel: "BBB Penetrant (CNS Active)",
+                negLabel: "Non-Penetrant (CNS Inactive)",
+                posIsRisk: false,
+                desc: "Predicts blood-brain barrier permeability.",
+                probText: "Probability of BBB Penetration"
+            },
+            "hERG": {
+                name: "hERG Cardiotoxicity Blocker",
+                posLabel: "Blocker (Cardio Toxicity Risk)",
+                negLabel: "Non-Blocker (Safe Profile)",
+                posIsRisk: true,
+                desc: "Predicts cardiac safety profile.",
+                probText: "Probability of hERG Blockade"
+            },
+            "CYP2C9": {
+                name: "CYP2C9 Metabolic Inhibition",
+                posLabel: "Inhibitor (DDI Risk)",
+                negLabel: "Non-Inhibitor (Safe)",
+                posIsRisk: true,
+                desc: "Predicts hepatic safety.",
+                probText: "Probability of CYP2C9 Inhibition"
+            },
+            "CYP3A4": {
+                name: "CYP3A4 Metabolic Inhibition",
+                posLabel: "Inhibitor (DDI Risk)",
+                negLabel: "Non-Inhibitor (Safe)",
+                posIsRisk: true,
+                desc: "Predicts metabolic safety.",
+                probText: "Probability of CYP3A4 Inhibition"
+            },
+            "AqSolDB": {
+                name: "Aqueous Solubility",
+                desc: "Predicts solubility of drug molecules in water.",
+                interpret: (val) => {
+                    if (val <= -10) return "Highly insoluble (Extremely difficult to formulate).";
+                    if (val <= -6) return "Insoluble (Difficult absorption & formulation).";
+                    if (val <= -4) return "Moderately soluble (Standard drug range).";
+                    if (val <= -2) return "Soluble (Good pharmacokinetic profile).";
+                    return "Highly soluble (Excellent absorption potential).";
+                }
+            }
+        };
+
+        // Form Submit Handler
+        form.addEventListener("submit", async (e) => {
+            e.preventDefault();
+
+            // Clear previous states
+            errorBox.style.display = "none";
+            resultContainer.style.display = "none";
+            resultsNav.style.display = "none";
+
+            const smiles = smilesInput.value.trim();
+            const dataset = datasetSelect.value;
+
+            if (!dataset) {
+                showError("Please select a target ADMET property to predict.");
+                return;
+            }
+            if (!smiles) {
+                showError("SMILES string is required.");
+                return;
+            }
+
+            // Show loading
+            loading.style.display = "flex";
+            submitBtn.disabled = true;
+            submitBtn.textContent = "Analyzing...";
+
+            try {
+                const response = await fetch("/predict", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify({ dataset, smiles })
+                });
+
+                const data = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(data.error || "A server error occurred during prediction.");
+                }
+
+                renderResult(data, smiles);
+
+            } catch (err) {
+                showError(err.message || "Connection to the backend was lost. Please verify the server is active.");
+            } finally {
+                loading.style.display = "none";
+                submitBtn.disabled = false;
+                submitBtn.textContent = "Analyze Molecule";
+            }
+        });
+
+        // Form Reset Handler
+        resetBtn.addEventListener("click", () => {
+            form.reset();
+            errorBox.style.display = "none";
+            resultContainer.style.display = "none";
+            resultsNav.style.display = "none";
+            smilesInput.focus();
+        });
+
+        function showError(message) {
+            errorBox.textContent = message;
+            errorBox.style.display = "block";
+            errorBox.scrollIntoView({ behavior: "smooth", block: "nearest" });
+        }
+
+        function renderResult(data, smiles) {
+            const config = datasetLabelConfig[data.dataset] || {};
+            const option = datasetSelect.querySelector(`option[value="${data.dataset}"]`);
+            const category = option ? option.dataset.category : "absorption";
+            const categoryText = option ? option.textContent.split(":")[0].trim() : "Absorption";
+
+            // Card border and category badges classes
+            resultContainer.className = "result-card"; // Reset
+            resCategory.className = "result-category-badge " + category;
+            resCategory.textContent = categoryText;
+            resModelName.textContent = config.name || data.dataset;
+            resSmiles.textContent = smiles;
+            resAlgorithm.textContent = data.algorithm || "RandomForest";
+            resVersion.textContent = data.version || "Active";
+
+            if (data.task_type === "classification") {
+                // Classification logic
+                const predictionVal = parseFloat(data.prediction);
+                const isPositive = (predictionVal === 1.0);
+                const posIsRisk = config.posIsRisk || false;
+
+                // Set badge label
+                const label = isPositive ? config.posLabel : config.negLabel;
+                resBadge.textContent = label;
+
+                // Color based on risk status
+                if ((isPositive && posIsRisk) || (!isPositive && !posIsRisk && data.dataset === "BBBP" && predictionVal === 0.0)) {
+                    // Risk class, or BBB Inactive which is usually unfavorable for brain targets
+                    resBadge.className = "pred-badge unsafe-class";
+                    resultContainer.classList.add("danger-border");
+                } else {
+                    resBadge.className = "pred-badge safe-class";
+                    resultContainer.classList.add("success-border");
+                }
+
+                // Probability Bar setup
+                probContainer.style.display = "block";
+                regressionInfo.style.display = "none";
+                
+                const probText = config.probText || "Probability";
+                probDirectionText.textContent = probText;
+
+                // Fill logic
+                let probVal = 0.0;
+                if ("probability_positive_class" in data) {
+                    probVal = parseFloat(data.probability_positive_class);
+                } else if (data.probabilities && data.probabilities.length > 1) {
+                    probVal = parseFloat(data.probabilities[1]);
+                }
+                
+                const percentage = Math.round(probVal * 100);
+                probPercentageText.textContent = percentage + "%";
+                
+                // Triggers width transition with timeout
+                probFill.style.width = "0%";
+                setTimeout(() => {
+                    probFill.style.width = percentage + "%";
+                }, 50);
+
+                // Bar color
+                if (posIsRisk && percentage > 50) {
+                    probFill.className = "prob-bar-inner high-risk";
+                } else {
+                    probFill.className = "prob-bar-inner";
+                }
+
+            } else {
+                // Regression logic
+                const predictionVal = parseFloat(data.prediction);
+                resBadge.textContent = predictionVal.toFixed(4) + " logS";
+                resBadge.className = "pred-badge regression-val";
+                resultContainer.classList.add("success-border");
+
+                probContainer.style.display = "none";
+                regressionInfo.style.display = "block";
+
+                const interpretation = config.interpret ? config.interpret(predictionVal) : "";
+                regressionText.innerHTML = `<strong>${predictionVal.toFixed(4)} LogS</strong> — ${interpretation}`;
+            }
+
+            // Display results
+            resultContainer.style.display = "block";
+            resultsNav.style.display = "inline-block";
+            
+            // Scroll to the card
+            resultContainer.scrollIntoView({ behavior: "smooth", block: "nearest" });
+        }
+    });
+</script>
+
+</body>
+</html>
